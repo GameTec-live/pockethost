@@ -94,16 +94,3 @@ The master serves the UI on the base host and proxies
   `os/exec`.
 - Each tenant has an isolated data directory under
   `POCKETHOST_DATA_DIR/tenants`.
-
-## GitHub Actions
-
-This repository includes two automation workflows:
-
-- `docker.yml` builds and publishes multi-architecture images to
-  `ghcr.io/gametec-live/pockethost` on pushes to `main`, version tags, and
-  manual runs.
-- `bump-pocketbase.yml` runs on a schedule and opens a pull request when a newer
-  `github.com/pocketbase/pocketbase` module version is available.
-
-The Docker publishing workflow uses the repository `GITHUB_TOKEN` and requires
-package write permissions, which are declared in the workflow.

@@ -1,0 +1,65 @@
+name: Bump PocketBase
+
+on:
+  schedule:
+    - cron: "0 12 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump-pocketbase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Check for PocketBase update
+        id: update
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          current="$(go list -m -f '{{.Version}}' github.com/pocketbase/pocketbase)"
+          update="$(go list -m -u -json github.com/pocketbase/pocketbase | jq -r '.Update.Version // ""')"
+
+          echo "current=${current}" >> "$GITHUB_OUTPUT"
+          echo "latest=${update:-$current}" >> "$GITHUB_OUTPUT"
+
+          if [ -n "$update" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update PocketBase module
+        if: steps.update.outputs.available == 'true'
+        run: |
+          go get github.com/pocketbase/pocketbase@${{ steps.update.outputs.latest }}
+          go mod tidy
+
+      - name: Run tests
+        if: steps.update.outputs.available == 'true'
+        run: go test ./...
+
+      - name: Create pull request
+        if: steps.update.outputs.available == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: chore/bump-pocketbase-${{ steps.update.outputs.latest }}
+          delete-branch: true
+          title: "chore: bump PocketBase to ${{ steps.update.outputs.latest }}"
+          commit-message: "chore: bump PocketBase to ${{ steps.update.outputs.latest }}"
+          body: |
+            Automated PocketBase dependency update.
+
+            - Previous version: `${{ steps.update.outputs.current }}`
+            - New version: `${{ steps.update.outputs.latest }}`

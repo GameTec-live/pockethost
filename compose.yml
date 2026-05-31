@@ -1,0 +1,15 @@
+services:
+  pockethost:
+    build: .
+    image: pockethost:latest
+    restart: unless-stopped
+    environment:
+      POCKETHOST_BASE_HOST: pocketbase.domain.internal
+      POCKETHOST_DATA_DIR: /pb_data
+    ports:
+      - "80:8090"
+    volumes:
+      - pockethost_data:/pb_data
+
+volumes:
+  pockethost_data:

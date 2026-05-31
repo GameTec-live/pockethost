@@ -1,0 +1,7 @@
+.git
+pb_data
+pockethost.exe
+pockethost.exe~
+web/node_modules
+web/dist
+web/*.tsbuildinfo
